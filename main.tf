@@ -1,10 +1,8 @@
-provider "aws"
-{
+provider "aws" {
   region = "us-west-2"
 }
 
-module "vpc"
-{
+module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
   name = "eks-vpc"
@@ -23,8 +21,7 @@ module "vpc"
   }
 }
 
-module "eks"
-{
+module "eks" {
   source = "terraform-aws-modules/eks/aws"
 
   cluster_name = "eks-cluster"
@@ -34,4 +31,33 @@ module "eks"
     Terraform   = "true"
     Environment = "dev"
   }
+}
+
+resource "aws_iam_role" "My_IAM_Role" {
+  name = "Role_For_Deployers"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "My_IAM_Role" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  role       = aws_iam_role.My_IAM_Role.name
 }
